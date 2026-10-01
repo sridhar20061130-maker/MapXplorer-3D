@@ -1,14 +1,33 @@
-# MapXplorer — Next Generation 3D
+# MapXplorer 3D — Ultra NextGen
 
-A self-contained HTML/CSS/JavaScript futuristic map demo.
+Futuristic interactive map dashboard built with HTML, CSS, JavaScript and Leaflet.
 
-## Run in VS Code
-1. Open this exact `MapXplorer-3D` folder in VS Code.
-2. Open `index.html` with Live Server.
-3. Test the category buttons, search, map controls, directions, measure tool, save places, AI commands, 3D mode, depth mode, theme, and mobile menu.
+## Preserved
+- Existing neon/glass graphics
+- Animated particles
+- Animated 3D-style explorer characters
+- Hyper 3D mode
+- Depth camera
+- Search, categories, route, measure, save, share and map controls
+- MapX AI demo
+- Responsive layout
 
-## Deploy to Vercel
-This is a static site. Put `index.html`, `style.css`, and `script.js` in the repository root. Vercel can deploy it without a build command.
+## New in Ultra NextGen
+- Animated 3D city-building overlay when Hyper 3D / Depth is active
+- Radar scan rings and scanline effect
+- Compass HUD
+- FPS indicator
+- More responsive 3D character depth/shadows
+- Animated AI orb and quick-action sweeps
+- Better hover depth and panel lighting
+- Extra GPU-friendly effects using CSS transforms and opacity
+- Reduced-motion support
 
-## Note about MapX AI
-The included AI is a client-side command assistant for the demo. It does not expose an API key. A real LLM connection should be added through a secure server/serverless endpoint rather than putting a secret key in `script.js`.
+## Run
+Open `index.html` with VS Code Live Server.
+
+## Deploy
+This is a static site. For Vercel, use the folder containing `index.html` as the Root Directory and choose `Other` as the application preset.
+
+## Note about AI
+MapX AI is a client-side demo assistant. A real LLM requires a secure server/API endpoint; never place a private API key directly in `script.js`.

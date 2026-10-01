@@ -32,8 +32,8 @@
   <div id="mapWrap" class="map-wrap">
     <div id="map"></div>
     <div class="map-grid"></div><div class="scan"></div>
-    <div id="characterLayer"></div><div id="routeFx"></div>
-    <div class="map-hud"><span class="live-dot"></span> MAP CORE ONLINE <b id="zoomReadout">Z13</b></div>
+    <div id="cityFx" aria-hidden="true"></div><div id="radarFx" aria-hidden="true"></div><div id="characterLayer"></div><div id="routeFx"></div><div class="map-scanline" aria-hidden="true"></div>
+    <div class="map-hud"><span class="live-dot"></span> MAP CORE ONLINE <b id="zoomReadout">Z13</b><span id="fpsReadout">60 FPS</span></div>
     <div class="categories" id="categories">
       <button class="cat active" data-type="all">◆<small>All</small></button>
       <button class="cat" data-type="restaurant">🍴<small>Food</small></button>
@@ -48,7 +48,7 @@
       <div class="selected-body"><div class="eyebrow">MAPX DISCOVERY</div><h3 id="selectedName">Zenith Restaurant</h3><span id="selectedRating" class="rating">★ 4.8</span><p id="selectedDesc">Italian Restaurant · 500m</p><button id="details" class="primary">View Details</button><button id="saveDetail" class="save-detail">♡ Save Place</button></div>
     </div>
     <div class="weather glass" id="weather"><div><b>Coimbatore</b><small>INDIA · LIVE</small></div><strong>29°</strong><span>Partly Cloudy · Feels 33°</span><hr><small>Humidity 65% · Wind 12 km/h · <em>AQI 42 GOOD</em></small></div>
-    <div class="map-controls glass"><button id="locateMap">➤<small>Locate</small></button><button id="tiltBtn">◢<small>Depth</small></button><button id="threeD">3D<small>Hyper</small></button><button id="mapMode">▦<small>Map</small></button><button id="terrainMode">△<small>Terrain</small></button></div>
+    <div class="map-compass" aria-hidden="true"><span>N</span><i></i><span>E</span><span>S</span><span>W</span></div><div class="map-controls glass"><button id="locateMap">➤<small>Locate</small></button><button id="tiltBtn">◢<small>Depth</small></button><button id="threeD">3D<small>Hyper</small></button><button id="mapMode">▦<small>Map</small></button><button id="terrainMode">△<small>Terrain</small></button></div>
     <div class="zoom-controls"><button id="zoomIn">＋</button><button id="zoomOut">−</button></div>
   </div>
   <div class="action-strip panel">
@@ -64,8 +64,8 @@
   <section class="panel traffic" id="trafficPanel"><header><b>Traffic Overview</b><em>LIVE</em></header><div class="traffic-visual"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><small>LOW <span>MODERATE</span> HIGH</small></section>
   <section class="panel saved" id="savedPanel"><header><b>Saved Places</b><button id="clearSaved">Clear</button></header><div id="savedList"></div></section>
   <section class="panel ai-box" id="aiBox"><div class="ai-head"><div class="ai-orb"><span>AI</span></div><div><b>MapX AI</b><small>VISION NAVIGATOR · BETA</small></div><span id="aiStatus" class="ai-status">ONLINE</span></div><div class="ai-msg" id="aiMsg">Hello! I’m MapX AI.<br><span>Tell me what you want to explore.</span></div><div class="quick"><button>Find restaurants</button><button>Show hospitals</button><button>Nearby parks</button><button>Activate 3D</button></div><div class="ai-input"><input id="aiInput" placeholder="Ask MapX AI..."><button id="sendAI">➤</button></div><button id="closeAI" class="ai-min">⌄</button></section>
-  <section class="panel gallery-panel" id="galleryPanel"><header><b>3D Explorer Gallery</b></header><div class="mini-scene"><div class="mini-character"><div class="mini-head"></div><div class="mini-body"></div></div><div class="mini-ring"></div></div><p>Interactive explorer characters follow your map view.</p><button id="galleryBtn" class="primary full">Launch 3D Mode</button></section>
-  <section class="panel settings-panel" id="settingsPanel"><header><b>Experience Controls</b></header><label><span>Particles</span><input id="particlesToggle" type="checkbox" checked></label><label><span>Character Animation</span><input id="charToggle" type="checkbox" checked></label><label><span>Low Motion</span><input id="motionToggle" type="checkbox"></label></section>
+  <section class="panel gallery-panel" id="galleryPanel"><header><b>3D Explorer Gallery</b><span class="status">LIVE 3D</span></header><div class="mini-scene"><div class="mini-character"><div class="mini-head"></div><div class="mini-body"></div></div><div class="mini-ring"></div></div><p>Interactive explorer characters follow your map view.</p><button id="galleryBtn" class="primary full">Launch 3D Mode</button></section>
+  <section class="panel settings-panel" id="settingsPanel"><header><b>Experience Controls</b><span class="status">OPTIMIZED</span></header><label><span>Particles</span><input id="particlesToggle" type="checkbox" checked></label><label><span>Character Animation</span><input id="charToggle" type="checkbox" checked></label><label><span>Low Motion</span><input id="motionToggle" type="checkbox"></label></section>
 </aside>
 </main>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="script.js"></script>
