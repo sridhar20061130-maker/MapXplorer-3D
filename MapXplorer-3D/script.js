@@ -23,6 +23,7 @@ const map=L.map("map",{zoomControl:false,preferCanvas:true}).setView([11.0168,76
 const mapLayer=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 const terrainLayer=L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png");
 let currentLayer=mapLayer,markers=[],activeType="all",activePlace=places[0],saved=new Set(),routeLines=[],measurePoints=[],measureMarkers=[];
+let livePlaces=[],liveMarkers=[];
 const $=id=>document.getElementById(id);
 function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>t.classList.remove("show"),1900)}
 function icon(type){return L.divIcon({className:"",html:`<div class="custom-pin" style="width:42px;height:42px;background:linear-gradient(135deg,#8a32ff,#208eff)"><span>${emoji[type]||"◆"}</span></div>`,iconSize:[42,42],iconAnchor:[21,42]})}
@@ -61,6 +62,46 @@ function activate3D(){ $("mapWrap").classList.add("hyper3d");refresh();toast("Hy
 function drawRoute(){clearRoute(false);const pts=[L.latLng(11.0168,76.9558),L.latLng(11.020,76.962),L.latLng(11.0183,76.9700)];routeLines.push(L.polyline(pts,{color:"#8c3cff",weight:12,opacity:.22}).addTo(map));routeLines.push(L.polyline(pts,{color:"#32dcff",weight:4,dashArray:"8 10",opacity:1}).addTo(map));const fx=$("routeFx");fx.innerHTML="";for(let i=0;i<pts.length-1;i++){const a=map.latLngToContainerPoint(pts[i]),b=map.latLngToContainerPoint(pts[i+1]);const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy),beam=document.createElement("div");beam.className="route-beam";beam.style.left=a.x+"px";beam.style.top=a.y+"px";beam.style.width=len+"px";beam.style.transform=`rotate(${Math.atan2(dy,dx)}rad)`;beam.style.animationDelay=(-i*.3)+"s";fx.appendChild(beam)}map.fitBounds(L.latLngBounds(pts),{padding:[90,90],duration:.8});$("routePanel").querySelector(".status").textContent="ACTIVE";toast("Glowing 3D route created")}
 function clearRoute(show=true){routeLines.forEach(x=>map.removeLayer(x));routeLines=[];$("routeFx").innerHTML="";$("routePanel").querySelector(".status").textContent="READY";if(show)toast("Route cleared")}
 function measureMode(){measurePoints=[];measureMarkers.forEach(m=>map.removeLayer(m));measureMarkers=[];toast("Measure mode: click two points on the map");map.once("click",e=>{measurePoints.push(e.latlng);measureMarkers.push(L.circleMarker(e.latlng,{radius:7,color:"#ff4fd1",fillOpacity:1}).addTo(map));toast("First point set — click the second point") ;map.once("click",e2=>{measurePoints.push(e2.latlng);measureMarkers.push(L.circleMarker(e2.latlng,{radius:7,color:"#29e6ff",fillOpacity:1}).addTo(map));const km=map.distance(e.latlng,e2.latlng)/1000;L.polyline(measurePoints,{color:"#ff4fd1",weight:3,dashArray:"6 8"}).addTo(map);toast(`Distance: ${km.toFixed(2)} km`)})})}
+
+function liveType(item){
+  const a=((item.type||"")+" "+(item.category||"")).toLowerCase();
+  if(/restaurant|cafe|fast_food|food/.test(a)) return "restaurant";
+  if(/hotel|guest_house|hostel/.test(a)) return "hotel";
+  if(/hospital|clinic|doctors|pharmacy/.test(a)) return "hospital";
+  if(/college|university|school|education/.test(a)) return "college";
+  if(/park|garden|nature_reserve|playground/.test(a)) return "park";
+  if(/mall|shop|commercial|market/.test(a)) return "shopping";
+  return "shopping";
+}
+function clearLiveSearchMarkers(){liveMarkers.forEach(m=>map.removeLayer(m));liveMarkers=[];}
+function addLivePlace(item){
+  const p={name:item.display_name.split(',')[0],type:liveType(item),lat:Number(item.lat),lng:Number(item.lon),rating:"LIVE",desc:`OpenStreetMap place · ${item.display_name.split(',').slice(1,3).join(',').trim()||"Location"}`,img:"https://images.unsplash.com/photo-1444723121867-7a241cacace9?auto=format&fit=crop&w=700&q=80",live:true};
+  const m=L.marker([p.lat,p.lng],{icon:icon(p.type)}).addTo(map);
+  m.bindTooltip(`<b>${escapeHtml(p.name)}</b><br>${escapeHtml(p.desc)}`,{direction:"top",offset:[0,-30]});
+  m.on("click",()=>selectPlace(p));
+  liveMarkers.push(m); livePlaces=[p];
+  selectPlace(p);
+  return p;
+}
+async function searchRealPlaces(q){
+  if(q.length<2)return;
+  const box=$("results");
+  box.innerHTML='<div class="live-result">🌐 Searching OpenStreetMap…</div>'; box.style.display="block";
+  try{
+    const url=`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&addressdetails=1&q=${encodeURIComponent(q)}`;
+    const res=await fetch(url,{headers:{"Accept":"application/json"}});
+    if(!res.ok)throw new Error("search failed");
+    const data=await res.json();
+    box.innerHTML="";
+    if(!data.length){box.innerHTML='<div class="live-result">No live places found.</div>';return;}
+    data.forEach(item=>{
+      const d=document.createElement("div"); d.className="live-result";
+      d.innerHTML=`🌐 <b>${escapeHtml(item.display_name.split(',')[0])}</b><small>${escapeHtml(item.display_name)}</small>`;
+      d.onclick=()=>{clearLiveSearchMarkers();addLivePlace(item);$("search").value=item.display_name.split(',')[0];box.style.display="none";};
+      box.appendChild(d);
+    });
+  }catch(e){box.innerHTML='<div class="live-result">Live search unavailable. Try again.</div>';toast("Live place search unavailable");}
+}
 function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
 function aiAnswer(q){const s=q.toLowerCase();if(/restaurant|food|eat|cafe/.test(s)){render("restaurant");return"Food mode activated. I found the nearby restaurants and placed 3D explorers beside them."}if(/hospital|health|medical/.test(s)){render("hospital");return"Health mode activated. Hospital locations are highlighted."}if(/park|nature/.test(s)){render("park");return"Nature mode activated. Park locations are highlighted."}if(/hotel|stay/.test(s)){render("hotel");return"Hotel mode activated. Nearby hotels are displayed."}if(/college|university|education/.test(s)){render("college");return"Education mode activated. College locations are displayed."}if(/mall|shop|shopping/.test(s)){render("shopping");selectPlace(places[1]);return"Shopping mode activated. I focused the mall in Hyper Map view."}if(/route|direction|navigate/.test(s)){drawRoute();return"I created a glowing route to Brookefields Mall."}if(/3d|three d|cartoon|character|hyper/.test(s)){activate3D();return"Hyper 3D is active. The animated explorer characters now follow the map."}if(/nearby|near me|around/.test(s)){fitAllPlaces();return"Nearby scan complete. I expanded the map and showed the explorer team."}if(/save/.test(s)){saved.add(activePlace.name);updateSaveButton();renderSaved();return`${activePlace.name} has been saved to your MapX collection.`}if(/weather/.test(s)){$("weather").scrollIntoView({behavior:"smooth",block:"center"});return"Live weather panel is already available on the map."}return"I can search categories, build routes, measure distance, save places, control Hyper 3D, and move the map. Try: ‘show restaurants’, ‘activate 3D’, or ‘route to mall’."}
 function sendAI(){const q=$("aiInput").value.trim();if(!q)return;$("aiBox").classList.add("thinking");$("aiStatus").textContent="THINKING";setTimeout(()=>{$("aiMsg").innerHTML=`<b>You:</b> ${escapeHtml(q)}<br><br><b>MapX AI:</b> ${aiAnswer(q)}`;$("aiInput").value="";$("aiBox").classList.remove("thinking");$("aiStatus").textContent="ONLINE"},450)}
@@ -76,7 +117,7 @@ $("tiltBtn").onclick=()=>{const w=$("mapWrap");w.classList.toggle("depth-mode");
 $("closeCard").onclick=()=>$("selectedCard").style.display="none";$("saveDetail").onclick=()=>{saved.has(activePlace.name)?saved.delete(activePlace.name):saved.add(activePlace.name);updateSaveButton();renderSaved();toast(saved.has(activePlace.name)?"Place saved":"Place removed")};$("details").onclick=()=>{pulse($("selectedCard"));toast(`${activePlace.name} · ${activePlace.desc} · ${activePlace.rating}`)};
 $("routeBtn").onclick=()=>{$("routePanel").scrollIntoView({behavior:"smooth",block:"center"});pulse($("routePanel"))};$("getDirections").onclick=drawRoute;$("clearRoute").onclick=()=>clearRoute();$("measure").onclick=measureMode;
 $("addPlace").onclick=()=>{toast("Click the map to place a custom marker");map.once("click",e=>{const m=L.marker(e.latlng,{icon:icon("all")}).addTo(map);m.bindPopup("<b>Custom MapX Place</b><br>Added interactively.").openPopup();toast("Custom place added")})};$("share").onclick=async()=>{try{await navigator.clipboard.writeText(location.href);toast("Map link copied")}catch{toast("Share link: copy the page URL from your browser")}};
-$("search").oninput=()=>{const q=$("search").value.trim().toLowerCase(),box=$("results");box.innerHTML="";if(!q){box.style.display="none";return}places.filter(p=>`${p.name} ${p.type}`.toLowerCase().includes(q)).slice(0,6).forEach(p=>{const d=document.createElement("div");d.textContent=`${emoji[p.type]||"◆"} ${p.name} — ${p.desc}`;d.onclick=()=>{selectPlace(p);$("search").value=p.name;box.style.display="none"};box.appendChild(d)});box.style.display=box.children.length?"block":"none"};$("searchBtn").onclick=()=>{const q=$("search").value.trim().toLowerCase(),p=places.find(x=>`${x.name} ${x.type}`.toLowerCase().includes(q));p?selectPlace(p):toast("No matching demo place found")};
+$("search").oninput=()=>{const q=$("search").value.trim().toLowerCase(),box=$("results");box.innerHTML="";if(!q){box.style.display="none";return}places.filter(p=>`${p.name} ${p.type}`.toLowerCase().includes(q)).slice(0,6).forEach(p=>{const d=document.createElement("div");d.textContent=`${emoji[p.type]||"◆"} ${p.name} — ${p.desc}`;d.onclick=()=>{selectPlace(p);$("search").value=p.name;box.style.display="none"};box.appendChild(d)});const live=document.createElement("div");live.className="live-result search-live-trigger";live.textContent="🌐 Search real places";live.onclick=()=>searchRealPlaces($("search").value.trim());box.appendChild(live);box.style.display="block"};$("searchBtn").onclick=()=>{const raw=$("search").value.trim(),q=raw.toLowerCase(),p=places.find(x=>`${x.name} ${x.type}`.toLowerCase().includes(q));p?selectPlace(p):searchRealPlaces(raw)}; $("search").addEventListener("keydown",e=>{if(e.key==="Enter"){const raw=e.currentTarget.value.trim();if(raw)searchRealPlaces(raw)}});
 $("sendAI").onclick=sendAI;$("aiInput").onkeydown=e=>{if(e.key==="Enter")sendAI()};document.querySelectorAll(".quick button").forEach(b=>b.onclick=()=>{$("aiInput").value=b.textContent;sendAI()});$("aiNav").onclick=()=>{$("aiBox").scrollIntoView({behavior:"smooth",block:"center"});pulse($("aiBox"))};$("closeAI").onclick=()=>$("aiBox").classList.toggle("minimized");
 $("menuBtn").onclick=()=>$("sidebar").classList.toggle("open");$("theme").onclick=()=>{document.body.classList.toggle("light-mode");toast(document.body.classList.contains("light-mode")?"Light theme ON":"Dark theme ON")};$("bell").onclick=()=>toast("MapX: 3 new exploration notifications");$("profileBtn").onclick=()=>toast("Profile: Sridhar S");$("premiumBtn").onclick=activate3D;$("galleryBtn").onclick=activate3D;
 $("viewAll").onclick=fitAllPlaces;$("clearRecent").onclick=()=>{document.querySelectorAll("#recentPanel p").forEach(x=>x.remove());toast("Recent searches cleared")};$("clearSaved").onclick=()=>{saved.clear();renderSaved();updateSaveButton();toast("Saved places cleared")};
@@ -85,4 +126,4 @@ document.querySelectorAll(".nav").forEach(btn=>btn.onclick=()=>{document.querySe
 $("particlesToggle").onchange=()=>document.body.classList.toggle("hide-particles",!$("particlesToggle").checked);$("charToggle").onchange=refresh;$("motionToggle").onchange=()=>{document.body.classList.toggle("low-motion",$("motionToggle").checked);if(!$('motionToggle').checked)requestAnimationFrame(updateFps);toast($("motionToggle").checked?"Low motion enabled":"Full motion enabled")};
 function pulse(el){if(!el)return;el.classList.remove("pulse");void el.offsetWidth;el.classList.add("pulse")}
 for(let i=0;i<65;i++){const p=document.createElement("i");p.className="particle";p.style.left=Math.random()*100+"%";p.style.animationDuration=7+Math.random()*11+"s";p.style.animationDelay=-Math.random()*14+"s";p.style.opacity=.2+Math.random()*.7;$("particles").appendChild(p)}
-window.addEventListener("resize",refresh);map.on("move zoom",renderCityFx);renderCityFx();requestAnimationFrame(updateFps);setTimeout(()=>toast("MapX AI + 3D explorer core online"),900);
+window.addEventListener("resize",refresh);map.on("move zoom",renderCityFx);renderCityFx();requestAnimationFrame(updateFps);setTimeout(()=>toast("MapX AI + 3D explorer core online · Live place search ready"),900);

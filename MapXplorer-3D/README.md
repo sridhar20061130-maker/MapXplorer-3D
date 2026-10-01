@@ -1,33 +1,14 @@
-# MapXplorer 3D — Ultra NextGen
+# MapXplorer 3D — Real Places Upgrade
 
-Futuristic interactive map dashboard built with HTML, CSS, JavaScript and Leaflet.
-
-## Preserved
-- Existing neon/glass graphics
-- Animated particles
-- Animated 3D-style explorer characters
-- Hyper 3D mode
-- Depth camera
-- Search, categories, route, measure, save, share and map controls
-- MapX AI demo
-- Responsive layout
-
-## New in Ultra NextGen
-- Animated 3D city-building overlay when Hyper 3D / Depth is active
-- Radar scan rings and scanline effect
-- Compass HUD
-- FPS indicator
-- More responsive 3D character depth/shadows
-- Animated AI orb and quick-action sweeps
-- Better hover depth and panel lighting
-- Extra GPU-friendly effects using CSS transforms and opacity
-- Reduced-motion support
+This version keeps the existing MapXplorer 3D interface and adds live place search using OpenStreetMap Nominatim.
 
 ## Run
-Open `index.html` with VS Code Live Server.
+Open `index.html` with Live Server.
 
-## Deploy
-This is a static site. For Vercel, use the folder containing `index.html` as the Root Directory and choose `Other` as the application preset.
+## Live search
+Search a place in the top search box. Existing demo places are matched first; if there is no match, use **Search real places** to query OpenStreetMap.
 
-## Note about AI
-MapX AI is a client-side demo assistant. A real LLM requires a secure server/API endpoint; never place a private API key directly in `script.js`.
+## Notes
+- Internet access is required for live place search and map tiles.
+- OpenStreetMap/Nominatim usage is subject to its public service policy and rate limits.
+- The existing 19 curated MapX places, 3D characters, Hyper 3D, route demo, measure tool, saved places, and AI demo are preserved.

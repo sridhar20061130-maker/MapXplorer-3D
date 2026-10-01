@@ -40,3 +40,9 @@ body{background:radial-gradient(circle at 55% 18%,#24103e 0%,#090611 35%,#04040a
 @keyframes buttonSweep{0%,60%{transform:translateX(-120%)}80%,100%{transform:translateX(120%)}}
 @media(max-width:900px){.map-compass{bottom:105px;right:8px;transform:scale(.82)}#radarFx{width:130px;height:130px}.city-building{opacity:.45}.map-hud #fpsReadout{display:none}}
 @media(prefers-reduced-motion:reduce){.map-scanline,#radarFx:before,#radarFx:after,.city-building:after,.map-character,.map-character .badge,.ai-orb:before,.quick button:after{animation:none!important}}
+
+/* Live place search */
+.live-result{display:flex;flex-direction:column;gap:3px;padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.08);cursor:pointer}
+.live-result:hover{background:rgba(138,50,255,.16)}
+.live-result small{display:block;opacity:.68;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.search-live-trigger{color:#65d8ff;font-weight:700}
