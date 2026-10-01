@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MapXplorer — Next Generation 3D Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="particles"></div><div id="toast"></div>
+<header class="topbar">
+  <button id="menuBtn" class="icon-btn" aria-label="Menu">☰</button>
+  <div class="brand"><span class="brand-gem">◇</span> Map<span>Xplorer</span><small>EXPLORE · DISCOVER · EXPERIENCE</small></div>
+  <div class="search-wrap"><span>⌕</span><input id="search" autocomplete="off" placeholder="Search places, restaurants, hospitals..."><button id="searchBtn">SEARCH</button><div id="results"></div></div>
+  <div class="profile"><button id="bell" class="top-icon">♢</button><button id="theme" class="top-icon">☼</button><button id="profileBtn" class="avatar">S</button><span>Sridhar S</span></div>
+</header>
+<main>
+<aside id="sidebar" class="sidebar">
+  <button class="nav active" data-nav="explore">◈ <span>Explore</span></button>
+  <button class="nav" data-nav="categories">▦ <span>Categories</span></button>
+  <button class="nav" data-nav="saved">♡ <span>Saved Places</span></button>
+  <button class="nav" data-nav="routes">⌁ <span>Routes</span></button>
+  <button class="nav" data-nav="nearby">⌖ <span>Nearby</span></button>
+  <button class="nav" data-nav="traffic">≈ <span>Traffic</span></button>
+  <button class="nav" data-nav="weather">☁ <span>Weather</span></button>
+  <button class="nav" data-nav="gallery">✦ <span>3D Gallery</span></button>
+  <button class="nav" id="aiNav" data-nav="ai">🤖 <span>MapX AI</span></button>
+  <button class="nav" data-nav="settings">⚙ <span>Settings</span></button>
+  <div class="premium"><div class="premium-gem">◆</div><b>Hyper 3D</b><p>Unlock the full depth experience.</p><button id="premiumBtn">Activate Demo ›</button></div>
+</aside>
+<section class="content">
+  <div id="mapWrap" class="map-wrap">
+    <div id="map"></div>
+    <div class="map-grid"></div><div class="scan"></div>
+    <div id="characterLayer"></div><div id="routeFx"></div>
+    <div class="map-hud"><span class="live-dot"></span> MAP CORE ONLINE <b id="zoomReadout">Z13</b></div>
+    <div class="categories" id="categories">
+      <button class="cat active" data-type="all">◆<small>All</small></button>
+      <button class="cat" data-type="restaurant">🍴<small>Food</small></button>
+      <button class="cat" data-type="hotel">▣<small>Hotels</small></button>
+      <button class="cat" data-type="hospital">✚<small>Health</small></button>
+      <button class="cat" data-type="college">◆<small>Colleges</small></button>
+      <button class="cat" data-type="park">♣<small>Parks</small></button>
+      <button class="cat" data-type="shopping">▤<small>Shopping</small></button>
+    </div>
+    <div class="selected-card" id="selectedCard">
+      <button class="close-card" id="closeCard">×</button><img id="selectedImg" src="" alt="Place">
+      <div class="selected-body"><div class="eyebrow">MAPX DISCOVERY</div><h3 id="selectedName">Zenith Restaurant</h3><span id="selectedRating" class="rating">★ 4.8</span><p id="selectedDesc">Italian Restaurant · 500m</p><button id="details" class="primary">View Details</button><button id="saveDetail" class="save-detail">♡ Save Place</button></div>
+    </div>
+    <div class="weather glass" id="weather"><div><b>Coimbatore</b><small>INDIA · LIVE</small></div><strong>29°</strong><span>Partly Cloudy · Feels 33°</span><hr><small>Humidity 65% · Wind 12 km/h · <em>AQI 42 GOOD</em></small></div>
+    <div class="map-controls glass"><button id="locateMap">➤<small>Locate</small></button><button id="tiltBtn">◢<small>Depth</small></button><button id="threeD">3D<small>Hyper</small></button><button id="mapMode">▦<small>Map</small></button><button id="terrainMode">△<small>Terrain</small></button></div>
+    <div class="zoom-controls"><button id="zoomIn">＋</button><button id="zoomOut">−</button></div>
+  </div>
+  <div class="action-strip panel">
+    <button id="routeBtn">⌁ <span>Directions</span></button><button id="addPlace">＋ <span>Add Place</span></button><button id="measure">⌗ <span>Measure</span></button><button id="share">↗ <span>Share</span></button><button id="clearRoute">⊗ <span>Clear Route</span></button>
+  </div>
+  <div class="dashboard">
+    <section class="panel popular" id="popularPanel"><header><b>Popular Places Near You</b><button id="viewAll">View all ›</button></header><div class="cards" id="popularCards"></div></section>
+    <section class="panel route-panel" id="routePanel"><header><b>Route Planner</b><span class="status">READY</span></header><p>🔵 My Location</p><p>🔴 Brookefields Mall</p><div class="transport"><button class="active">🚗</button><button>🚶</button><button>🚲</button></div><button id="getDirections" class="primary full">Get Directions ›</button></section>
+    <section class="panel recent" id="recentPanel"><header><b>Recent Searches</b><button id="clearRecent">Clear</button></header><p>⌕ Brookefields Mall <small>2.1km</small></p><p>⌕ Ganga Hospital <small>1.1km</small></p><p>⌕ VOC Park <small>1.2km</small></p></section>
+  </div>
+</section>
+<aside class="rightbar">
+  <section class="panel traffic" id="trafficPanel"><header><b>Traffic Overview</b><em>LIVE</em></header><div class="traffic-visual"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><small>LOW <span>MODERATE</span> HIGH</small></section>
+  <section class="panel saved" id="savedPanel"><header><b>Saved Places</b><button id="clearSaved">Clear</button></header><div id="savedList"></div></section>
+  <section class="panel ai-box" id="aiBox"><div class="ai-head"><div class="ai-orb"><span>AI</span></div><div><b>MapX AI</b><small>VISION NAVIGATOR · BETA</small></div><span id="aiStatus" class="ai-status">ONLINE</span></div><div class="ai-msg" id="aiMsg">Hello! I’m MapX AI.<br><span>Tell me what you want to explore.</span></div><div class="quick"><button>Find restaurants</button><button>Show hospitals</button><button>Nearby parks</button><button>Activate 3D</button></div><div class="ai-input"><input id="aiInput" placeholder="Ask MapX AI..."><button id="sendAI">➤</button></div><button id="closeAI" class="ai-min">⌄</button></section>
+  <section class="panel gallery-panel" id="galleryPanel"><header><b>3D Explorer Gallery</b></header><div class="mini-scene"><div class="mini-character"><div class="mini-head"></div><div class="mini-body"></div></div><div class="mini-ring"></div></div><p>Interactive explorer characters follow your map view.</p><button id="galleryBtn" class="primary full">Launch 3D Mode</button></section>
+  <section class="panel settings-panel" id="settingsPanel"><header><b>Experience Controls</b></header><label><span>Particles</span><input id="particlesToggle" type="checkbox" checked></label><label><span>Character Animation</span><input id="charToggle" type="checkbox" checked></label><label><span>Low Motion</span><input id="motionToggle" type="checkbox"></label></section>
+</aside>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="script.js"></script>
+</body></html>
