@@ -19,6 +19,22 @@ const places=[
 {name:"PSG Hospitals",type:"hospital",lat:11.0227,lng:76.9898,rating:"★ 4.6",desc:"Hospital · 3.7km",img:"https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=700&q=80"}
 ];
 const emoji={restaurant:"🍴",hotel:"▣",hospital:"✚",college:"◆",park:"♣",shopping:"▤"};
+// Offline-safe real-place fallback. Live providers are tried first; these verified city landmarks keep search useful when an API is blocked.
+const fallbackRealPlaces=[
+{name:"Brookefields Mall",type:"shopping",lat:11.0183,lng:76.9700,desc:"Shopping mall · Coimbatore",rating:"LIVE",img:"https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=700&q=80"},
+{name:"Gandhipuram",type:"shopping",lat:11.0183,lng:76.9680,desc:"City centre · Coimbatore",rating:"LIVE",img:"https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=700&q=80"},
+{name:"Ganga Hospital",type:"hospital",lat:11.0116,lng:76.9467,desc:"Hospital · Coimbatore",rating:"LIVE",img:"https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=700&q=80"},
+{name:"PSG Hospitals",type:"hospital",lat:11.0227,lng:76.9898,desc:"Hospital · Coimbatore",rating:"LIVE",img:"https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=700&q=80"},
+{name:"VOC Park",type:"park",lat:11.0074,lng:76.9608,desc:"Park · Coimbatore",rating:"LIVE",img:"https://images.unsplash.com/photo-1473445361085-b9a07f55608b?auto=format&fit=crop&w=700&q=80"},
+{name:"Ukkadam Lake",type:"park",lat:10.9958,lng:76.9572,desc:"Lake and park · Coimbatore",rating:"LIVE",img:"https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=700&q=80"},
+{name:"PSG College of Technology",type:"college",lat:11.0167,lng:76.9878,desc:"College · Coimbatore",rating:"LIVE",img:"https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=700&q=80"},
+{name:"Tidel Park Coimbatore",type:"college",lat:11.0780,lng:76.9950,desc:"Technology park · Coimbatore",rating:"LIVE",img:"https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=700&q=80"},
+{name:"Prozone Mall",type:"shopping",lat:11.0360,lng:76.9940,desc:"Shopping mall · Coimbatore",rating:"LIVE",img:"https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=700&q=80"},
+{name:"The Residency Towers Coimbatore",type:"hotel",lat:11.0177,lng:76.9731,desc:"Hotel · Coimbatore",rating:"LIVE",img:"https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=700&q=80"}
+];
+function fallbackSearch(q){const terms=q.toLowerCase().split(/\s+/).filter(Boolean);return fallbackRealPlaces.filter(p=>terms.every(t=>(p.name+" "+p.type+" "+p.desc).toLowerCase().includes(t))).slice(0,6)}
+function showSearchResults(data,box){box.innerHTML="";data.forEach(item=>{const d=document.createElement("div");d.className="live-result";d.innerHTML=`🌐 <b>${escapeHtml(item.name)}</b><small>${escapeHtml(item.display_name||item.desc||"Real place")}</small>`;d.onclick=()=>{clearLiveSearchMarkers();addLivePlace(item);$("search").value=item.name;box.style.display="none"};box.appendChild(d)});box.style.display=data.length?"block":"none"}
+
 const map=L.map("map",{zoomControl:false,preferCanvas:true}).setView([11.0168,76.9558],13);
 const mapLayer=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 const terrainLayer=L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png");
@@ -75,34 +91,53 @@ function liveType(item){
 }
 function clearLiveSearchMarkers(){liveMarkers.forEach(m=>map.removeLayer(m));liveMarkers=[];}
 function addLivePlace(item){
-  const p={name:item.display_name.split(',')[0],type:liveType(item),lat:Number(item.lat),lng:Number(item.lon),rating:"LIVE",desc:`OpenStreetMap place · ${item.display_name.split(',').slice(1,3).join(',').trim()||"Location"}`,img:"https://images.unsplash.com/photo-1444723121867-7a241cacace9?auto=format&fit=crop&w=700&q=80",live:true};
+  const display=item.display_name||item.name||"Real place";
+  const p={name:item.name||display.split(',')[0],type:liveType(item),lat:Number(item.lat),lng:Number(item.lon),rating:"LIVE",desc:`OpenStreetMap place · ${display.split(',').slice(1,3).join(',').trim()||"Location"}`,img:"https://images.unsplash.com/photo-1444723121867-7a241cacace9?auto=format&fit=crop&w=700&q=80",live:true};
   const m=L.marker([p.lat,p.lng],{icon:icon(p.type)}).addTo(map);
   m.bindTooltip(`<b>${escapeHtml(p.name)}</b><br>${escapeHtml(p.desc)}`,{direction:"top",offset:[0,-30]});
   m.on("click",()=>selectPlace(p));
   liveMarkers.push(m); livePlaces=[p];
-  selectPlace(p);
+  map.flyTo([p.lat,p.lng],16,{duration:.8});
+  selectPlace(p,false);
+  toast(`Real place found: ${p.name}`);
   return p;
 }
 async function searchRealPlaces(q){
-  if(q.length<2)return;
+  q=(q||"").trim();
+  if(q.length<2){toast("Type at least 2 characters");return;}
   const box=$("results");
-  box.innerHTML='<div class="live-result">🌐 Searching OpenStreetMap…</div>'; box.style.display="block";
-  try{
-    const url=`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&addressdetails=1&q=${encodeURIComponent(q)}`;
-    const res=await fetch(url,{headers:{"Accept":"application/json"}});
-    if(!res.ok)throw new Error("search failed");
-    const data=await res.json();
-    box.innerHTML="";
-    if(!data.length){box.innerHTML='<div class="live-result">No live places found.</div>';return;}
-    data.forEach(item=>{
-      const d=document.createElement("div"); d.className="live-result";
-      d.innerHTML=`🌐 <b>${escapeHtml(item.display_name.split(',')[0])}</b><small>${escapeHtml(item.display_name)}</small>`;
-      d.onclick=()=>{clearLiveSearchMarkers();addLivePlace(item);$("search").value=item.display_name.split(',')[0];box.style.display="none";};
-      box.appendChild(d);
-    });
-  }catch(e){box.innerHTML='<div class="live-result">Live search unavailable. Try again.</div>';toast("Live place search unavailable");}
+  box.innerHTML='<div class="live-result">🌐 Searching real places…</div>';
+  box.style.display="block";
+  const providers=[
+    async()=>{
+      const url=`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&addressdetails=1&accept-language=en&q=${encodeURIComponent(q)}`;
+      const res=await fetch(url,{headers:{"Accept":"application/json"}});
+      if(!res.ok)throw new Error("Nominatim HTTP "+res.status);
+      const data=await res.json();
+      return data.map(item=>({name:item.display_name?.split(",")[0]||"Place",display_name:item.display_name||q,lat:Number(item.lat),lon:Number(item.lon),type:item.type||"place",category:item.category||"place"}));
+    },
+    async()=>{
+      const url=`https://photon.komoot.io/api/?limit=6&lang=en&q=${encodeURIComponent(q)}`;
+      const res=await fetch(url);
+      if(!res.ok)throw new Error("Photon HTTP "+res.status);
+      const json=await res.json();
+      return (json.features||[]).map(f=>{const c=f.geometry?.coordinates||[];const pr=f.properties||{};const label=[pr.name,pr.street,pr.city,pr.state,pr.country].filter(Boolean).join(", ");return {name:pr.name||"Place",display_name:label||q,lat:Number(c[1]),lon:Number(c[0]),type:pr.type||"place",category:pr.osm_value||pr.type||"place"};});
+    }
+  ];
+  let data=[];
+  for(const provider of providers){try{data=await Promise.race([provider(),new Promise((_,reject)=>setTimeout(()=>reject(new Error("timeout")),5000))]);if(data.length)break;}catch(e){}}
+  if(!data.length){
+    const fallback=fallbackSearch(q);
+    if(fallback.length){
+      data=fallback.map(p=>({...p,lat:p.lat,lon:p.lng,display_name:p.desc,type:p.type,category:p.type}));
+      toast("Live search unavailable — showing built-in real places");
+    }
+  }
+  if(!data.length){box.innerHTML='<div class="live-result">No place found. Try “Brookefields”, “Ganga Hospital”, “VOC Park”, or “PSG”.</div>';toast("No real place found");return;}
+  showSearchResults(data,box);
 }
-function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
+
+function escapeHtml(s){s=String(s??"");return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
 function aiAnswer(q){const s=q.toLowerCase();if(/restaurant|food|eat|cafe/.test(s)){render("restaurant");return"Food mode activated. I found the nearby restaurants and placed 3D explorers beside them."}if(/hospital|health|medical/.test(s)){render("hospital");return"Health mode activated. Hospital locations are highlighted."}if(/park|nature/.test(s)){render("park");return"Nature mode activated. Park locations are highlighted."}if(/hotel|stay/.test(s)){render("hotel");return"Hotel mode activated. Nearby hotels are displayed."}if(/college|university|education/.test(s)){render("college");return"Education mode activated. College locations are displayed."}if(/mall|shop|shopping/.test(s)){render("shopping");selectPlace(places[1]);return"Shopping mode activated. I focused the mall in Hyper Map view."}if(/route|direction|navigate/.test(s)){drawRoute();return"I created a glowing route to Brookefields Mall."}if(/3d|three d|cartoon|character|hyper/.test(s)){activate3D();return"Hyper 3D is active. The animated explorer characters now follow the map."}if(/nearby|near me|around/.test(s)){fitAllPlaces();return"Nearby scan complete. I expanded the map and showed the explorer team."}if(/save/.test(s)){saved.add(activePlace.name);updateSaveButton();renderSaved();return`${activePlace.name} has been saved to your MapX collection.`}if(/weather/.test(s)){$("weather").scrollIntoView({behavior:"smooth",block:"center"});return"Live weather panel is already available on the map."}return"I can search categories, build routes, measure distance, save places, control Hyper 3D, and move the map. Try: ‘show restaurants’, ‘activate 3D’, or ‘route to mall’."}
 function sendAI(){const q=$("aiInput").value.trim();if(!q)return;$("aiBox").classList.add("thinking");$("aiStatus").textContent="THINKING";setTimeout(()=>{$("aiMsg").innerHTML=`<b>You:</b> ${escapeHtml(q)}<br><br><b>MapX AI:</b> ${aiAnswer(q)}`;$("aiInput").value="";$("aiBox").classList.remove("thinking");$("aiStatus").textContent="ONLINE"},450)}
 function renderSaved(){const box=$("savedList");box.innerHTML="";if(!saved.size){box.innerHTML='<div class="saved-list-row">No saved places yet <span>♡</span></div>';return}saved.forEach(name=>{const p=places.find(x=>x.name===name);const row=document.createElement("div");row.className="saved-list-row";row.innerHTML=`<span>${emoji[p.type]||"◆"} ${name}</span><span>♥</span>`;row.onclick=()=>selectPlace(p);box.appendChild(row)})}
