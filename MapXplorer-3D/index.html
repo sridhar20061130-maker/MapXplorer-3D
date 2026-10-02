@@ -55,6 +55,20 @@
     <button id="routeBtn">⌁ <span>Directions</span></button><button id="addPlace">＋ <span>Add Place</span></button><button id="measure">⌗ <span>Measure</span></button><button id="share">↗ <span>Share</span></button><button id="clearRoute">⊗ <span>Clear Route</span></button>
   </div>
   <div class="dashboard">
+    <section class="panel nearby-panel" id="nearbyPanel">
+      <header><b>📍 Nearby Explorer</b><span class="status" id="nearbyStatus">READY</span></header>
+      <div class="nearby-controls">
+        <button class="nearby-filter active" data-nearby="all">🌐 All</button>
+        <button class="nearby-filter" data-nearby="restaurant">🍴 Food</button>
+        <button class="nearby-filter" data-nearby="hospital">🏥 Health</button>
+        <button class="nearby-filter" data-nearby="hotel">🏨 Hotels</button>
+        <button class="nearby-filter" data-nearby="college">🎓 Education</button>
+        <button class="nearby-filter" data-nearby="park">🌳 Parks</button>
+        <button class="nearby-filter" data-nearby="shopping">🛍️ Shopping</button>
+      </div>
+      <button id="scanNearby" class="primary full">📡 Scan Nearby Places</button>
+      <div id="nearbyResults" class="nearby-results"><div class="nearby-empty">Press “Scan Nearby Places” to discover locations around the map.</div></div>
+    </section>
     <section class="panel popular" id="popularPanel"><header><b>Popular Places Near You</b><button id="viewAll">View all ›</button></header><div class="cards" id="popularCards"></div></section>
     <section class="panel route-panel" id="routePanel"><header><b>Route Planner</b><span class="status">READY</span></header><p>🔵 My Location</p><p>🔴 Brookefields Mall</p><div class="transport"><button class="active">🚗</button><button>🚶</button><button>🚲</button></div><button id="getDirections" class="primary full">Get Directions ›</button></section>
     <section class="panel recent" id="recentPanel"><header><b>Recent Searches</b><button id="clearRecent">Clear</button></header><p>⌕ Brookefields Mall <small>2.1km</small></p><p>⌕ Ganga Hospital <small>1.1km</small></p><p>⌕ VOC Park <small>1.2km</small></p></section>
